@@ -15,7 +15,7 @@ from keras.layers import Conv1D, MaxPooling1D, Embedding
 from keras.models import Model
 
 
-# In[20]:
+# In[2]:
 
 
 BASE_DIR = ''
@@ -23,7 +23,7 @@ GLOVE_DIR = os.path.join(BASE_DIR, 'glove.6B')
 MAX_SEQUENCE_LENGTH = 200
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 100
-VALIDATION_SPLIT = 0.2
+VALIDATION_SPLIT = 0.3
 
 
 # In[3]:
@@ -32,7 +32,7 @@ VALIDATION_SPLIT = 0.2
 print('Indexing word vectors.')
 
 embeddings_index = {}
-f = open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'),encoding="utf8")
+f = open(os.path.join(GLOVE_DIR, 'glove.6B.100d.txt'))
 for line in f:
     values = line.split()
     word = values[0]
@@ -50,19 +50,19 @@ import pandas as pd
 df = pd.read_csv("../categories_data_raw.csv")
 
 
-# In[8]:
+# In[5]:
 
 
 questions_train = df.values[:,0:1]
 
 
-# In[11]:
+# In[6]:
 
 
 questions_train
 
 
-# In[12]:
+# In[7]:
 
 
 texts = []
@@ -75,7 +75,7 @@ for item in questions_train:
 
 
 
-# In[13]:
+# In[8]:
 
 
 tokenizer = Tokenizer(num_words=MAX_NB_WORDS)
@@ -83,38 +83,38 @@ tokenizer.fit_on_texts(texts)
 sequences = tokenizer.texts_to_sequences(texts)
 
 
-# In[14]:
+# In[9]:
 
 
 word_index = tokenizer.word_index
 print('Found %s unique tokens.' % len(word_index))
 
 
-# In[21]:
+# In[10]:
 
 
 data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
 
 
-# In[16]:
+# In[11]:
 
 
 train_labels = df.values[:,1:]
 
 
-# In[22]:
+# In[12]:
 
 
 data.shape
 
 
-# In[18]:
+# In[13]:
 
 
 train_labels.shape
 
 
-# In[23]:
+# In[14]:
 
 
 # split the data into a training set and a validation set
@@ -122,12 +122,27 @@ indices = np.arange(data.shape[0])
 np.random.shuffle(indices)
 data = data[indices]
 labels = train_labels[indices]
-num_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
+TEST_SPLIT = 0.10
+VAL_SPLIT = 0.20
+num_test_samples = int(TEST_SPLIT * data.shape[0])
+num_validation_samples = int(VAL_SPLIT * data.shape[0])
+x_test = data[:num_test_samples]
+y_test = labels[:num_test_samples]
+x_val = data[num_test_samples:num_test_samples+num_validation_samples]
+y_val = labels[num_test_samples:num_test_samples+num_validation_samples]
+x_train = data[num_test_samples+num_validation_samples:]
+y_train = labels[num_test_samples+num_validation_samples:]
 
-x_train = data[:-num_validation_samples]
-y_train = labels[:-num_validation_samples]
-x_val = data[-num_validation_samples:]
-y_val = labels[-num_validation_samples:]
+
+# In[16]:
+
+
+print(x_train.shape)
+print(y_train.shape)
+print(x_test.shape)
+print(y_test.shape)
+print(x_val.shape)
+print(y_val.shape)
 
 
 # In[24]:
@@ -184,4 +199,16 @@ model.fit(x_train, y_train,
           batch_size=128,
           epochs=10,
           validation_data=(x_val, y_val))
+
+
+# In[ ]:
+
+
+preds = model.predict(x_test)
+
+
+# In[ ]:
+
+
+print(preds)
 
